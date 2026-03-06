@@ -1,5 +1,4 @@
 import cv2 as cv
-
 img = cv.imread('resources/Photos/park.jpg')
 cv.imshow('Boston', img)
 
