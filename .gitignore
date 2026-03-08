@@ -1,4 +1,6 @@
 .github
 .vscode
 .venv
-src/test
+test
+__pycache__
+main.py
