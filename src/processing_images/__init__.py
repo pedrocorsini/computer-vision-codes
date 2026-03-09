@@ -1,3 +1,7 @@
-from .image_processing import ImageProcessing
+from .image_processing import PictureProcessing
+from .image_processing import VideoProcessing
 
-__all__ = ['ImageProcessing']
+__all__ = [
+    'PictureProcessing',
+    'VideoProcessing'
+    ]

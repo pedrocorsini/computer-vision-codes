@@ -9,7 +9,7 @@ while True:
     isTrue, frame = capture.read() # reads the video frame by frame, returns frame and boolean if the frame was read successfully
     cv.imshow('Video', frame)   # displays the video frame by frame
 
-    if cv.waitKey(20) & 0xFF == ord('d'): #if the user press 'd' on the keyboard, breaks the 
+    if cv.waitKey(20) & 0xFF == ord('d'): #if the user press 'd' on the keyboard, breaks loop
         break
 
 capture.release()
