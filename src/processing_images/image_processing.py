@@ -6,12 +6,12 @@ import numpy as np
 class PictureProcessing:
     def __init__(self, image_path):
         self.image_path = image_path
-        self.image_path = None        
+        self._image = None        
 
     def read_picture(self):
         self._image = cv.imread(self.image_path)
 
-        if self.image_path is None:
+        if self._image is None:
             raise FileNotFoundError(f'Picture not found in {self.image_path}') 
         
         return self
@@ -43,7 +43,7 @@ class PictureProcessing:
     
     def rectangle(self, pt1, pt2, color, thickness):
 
-        if len(pt1) != 2 and pt2 != 2:
+        if len(pt1) != 2 or len(pt2) != 2:
             raise ValueError(f'pt1 and pt2 must be iterable with 2 elements (x,y)')
         p1 = (int(pt1[0]), int(pt1[1]))
         p2 = (int(pt2[0]), int(pt2[1]))
@@ -63,12 +63,18 @@ class PictureProcessing:
     
     def threshold_binary(self, thresh_value, max_value):
         if self._image is not None:
-            self._image = cv.cvtColor(self._image, cv.COLOR_BGR2GRAY)
-            threshold, self._image = cv.threshold(self._image, thresh=thresh_value, maxval=max_value, type=cv.THRESH_BINARY)
+            if len(self._image.shape) == 3:
+                self._image = cv.cvtColor(self._image, cv.COLOR_BGR2GRAY)
+            self._image = cv.threshold(self._image, thresh=thresh_value, maxval=max_value, type=cv.THRESH_BINARY)[1]
 
         return self
     
-    def close_images(self):
+    def canny(self, thresh1, thresh2):
+        if self._image is not None:
+            self._image = cv.Canny(self._image, thresh1, thresh2)
+        return self
+
+    def close_image(self):
         cv.waitKey(0)
         cv.destroyAllWindows()
         return self
@@ -106,6 +112,17 @@ class VideoProcessing:
         self.operations.append(lambda frame: cv.flip(frame, option))
         return self
     
+    def thresh(self, thresh_value, max_value):
+        self.operations.append(lambda frame: cv.threshold(frame, thresh_value, max_value, type=cv.THRESH_BINARY)[1])
+
+        return self
+    
+    def canny(self, thresh1, thresh2):
+        self.operations.append(lambda frame: cv.Canny(frame, thresh1, thresh2))
+
+        return self
+
+
     def display(self, name):
 
         if not isinstance(name, str):
