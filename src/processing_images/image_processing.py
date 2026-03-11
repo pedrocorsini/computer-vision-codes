@@ -172,8 +172,7 @@ class VideoProcessing:
                 print(f'FPS: {fps:.2f}\n')
             frame_count += 1
 
-            if cv.waitKey(20) & 0xFF == ord('d'): #if the user press 'd' on the keyboard, breaks the loop
-                break
+            cv.waitKey(1)
 
         self._video.release()
         cv.destroyAllWindows()
