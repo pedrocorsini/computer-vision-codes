@@ -1,24 +1,28 @@
 import cv2 as cv
 import numpy as np
+import time
 
 # Processing Pictures Class
 
 class PictureProcessing:
     def __init__(self, image_path):
         self.image_path = image_path
-        self._image = None        
+        self._image = None       
+
+    def _check_image(self):
+        if self._image is None:
+            raise ValueError('Image not loaded. Call read_picture() first.') 
 
     def read_picture(self):
         self._image = cv.imread(self.image_path)
-
-        if self._image is None:
-            raise FileNotFoundError(f'Picture not found in {self.image_path}') 
-        
         return self
 
+    def get(self):
+        return self._image
+
     def grayscale(self):
-        if self._image is not None:
-            self._image = cv.cvtColor(self._image, cv.COLOR_BGR2GRAY)
+        self._check_image()
+        self._image = cv.cvtColor(self._image, cv.COLOR_BGR2GRAY)
 
         return self
 
@@ -27,8 +31,8 @@ class PictureProcessing:
             raise ValueError('ksize must be iterable with 2 elements (x,y)')
         ksize_tuple = (int(ksize[0]), int(ksize[1]))
 
-        if self._image is not None:
-            self._image = cv.GaussianBlur(self._image, ksize_tuple, sigmaX=0)
+        self._check_image()
+        self._image = cv.GaussianBlur(self._image, ksize_tuple, sigmaX=0)
 
         return self
     
@@ -36,8 +40,8 @@ class PictureProcessing:
         if not isinstance(name, str):
             raise TypeError(f'name ({name}) must be a string')
 
-        if self._image is not None:
-            cv.imshow(name, self._image)
+        self._check_image()
+        cv.imshow(name, self._image)
 
         return self
     
@@ -56,32 +60,49 @@ class PictureProcessing:
         if thickness is None:
             thickness = -1
 
-        if self._image is not None:
-            self._image = cv.rectangle(self._image, p1, p2, color_tuple, thickness=thickness)
+        self._check_image()
+        self._image = cv.rectangle(self._image, p1, p2, color_tuple, thickness=thickness)
 
         return self
     
     def threshold_binary(self, thresh_value, max_value):
-        if self._image is not None:
-            if len(self._image.shape) == 3:
-                self._image = cv.cvtColor(self._image, cv.COLOR_BGR2GRAY)
-            self._image = cv.threshold(self._image, thresh=thresh_value, maxval=max_value, type=cv.THRESH_BINARY)[1]
+        self._check_image()
+        if len(self._image.shape) == 3:
+            self._image = cv.cvtColor(self._image, cv.COLOR_BGR2GRAY)
+        self._image = cv.threshold(self._image, thresh=thresh_value, maxval=max_value, type=cv.THRESH_BINARY)[1]
 
         return self
     
     def canny(self, thresh1, thresh2):
-        if self._image is not None:
-            self._image = cv.Canny(self._image, thresh1, thresh2)
+        self._check_image()
+        self._image = cv.Canny(self._image, thresh1, thresh2)
         return self
 
     def close_image(self):
         cv.waitKey(0)
         cv.destroyAllWindows()
         return self
+    
+    def bgr_spaces(self):
+        blank = np.zeros(self._image.shape[:2], dtype='uint8')
+        b, g, r = cv.split(self._image)
+
+        self.blue = PictureProcessing(self.image_path)
+        self.blue._image = cv.merge([b, blank, blank])
+
+        self.green = PictureProcessing(self.image_path)
+        self.green._image = cv.merge([blank, g, blank])
+
+        self.red = PictureProcessing(self.image_path)
+        self.red._image = cv.merge([blank, blank, r])
+
+        return self
+    
+# Processing Videos
 
 class VideoProcessing:
-    def __init__(self, video_path):
-        self.video_path = video_path
+    def __init__(self, video_path): # 0 -> first webcam
+        self.video_path = video_path 
         self._video = None
         self.operations = []
         
@@ -122,7 +143,6 @@ class VideoProcessing:
 
         return self
 
-
     def display(self, name):
 
         if not isinstance(name, str):
@@ -130,6 +150,8 @@ class VideoProcessing:
 
         if self._video is None:
             raise ValueError('Video not loaded. Call read_video() first.')
+
+        frame_count = 0
 
         while True:
             isTrue, frame = self._video.read()
@@ -140,7 +162,15 @@ class VideoProcessing:
             for op in self.operations:
                 frame = op(frame)
 
+            h, w = frame.shape[:2]
+            fps = self._video.get(cv.CAP_PROP_FPS)
+            
             cv.imshow(name, frame)
+
+            if frame_count % 30 == 0:
+                print(f'Resolution: {w} x {h}')
+                print(f'FPS: {fps:.2f}\n')
+            frame_count += 1
 
             if cv.waitKey(20) & 0xFF == ord('d'): #if the user press 'd' on the keyboard, breaks the loop
                 break
