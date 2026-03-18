@@ -58,16 +58,18 @@ def main():
     p_time = 0 # Previus time
     c_time = 0 # Current time
 
-    capture = cv.VideoCapture(1)
+    capture = cv.VideoCapture(0)
 
     detector = HandDetector()
     
     while True:
         success, frame = capture.read()
+        if not success:
+            break
         frame = detector.find_hands(frame)
         lm_list = detector.find_position(frame, draw=False)
-        if len(lm_list) != 0:
-            print(lm_list[4])
+        # if len(lm_list) != 0:
+        #     print(lm_list[4])
 
         # FPS
         c_time = time.time()
